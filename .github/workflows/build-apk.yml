@@ -2,6 +2,8 @@ name: Build APK
 on:
   push:
   workflow_dispatch:
+permissions:
+  contents: write
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -22,3 +24,10 @@ jobs:
         with:
           name: tap-deuce-debug-apk
           path: app/build/outputs/apk/debug/app-debug.apk
+      - name: Publish the APK as a direct download
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          cp app/build/outputs/apk/debug/app-debug.apk tap-deuce.apk
+          gh release delete test-build --yes --cleanup-tag || true
+          gh release create test-build tap-deuce.apk --target "$GITHUB_SHA" --title "Tap Deuce test build" --notes "Test build for Android. Download tap-deuce.apk, open it on your phone, and allow the install." --latest
